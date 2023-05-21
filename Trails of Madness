@@ -133,179 +133,253 @@ namespace Trails_of_Madness
 
         }
 
-        private void GameLoop(object sender, EventArgs e)
+      private void GameLoop(object sender, EventArgs e)
         {
-            if (!isPaused)
+
+            // this is the game loop event, this event will control all of the movements, outcome, collision and score for the game
+
+            txtScore.Content = "Score: " + score; // show the scoreo to the txtscore label. 
+
+            // start moving the character in the movement directions
+
+            if (goRight)
             {
+                // if go right boolean is true then move pac man to the right direction by adding the speed to the left 
+                Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) + speed);
+            }
+            if (goLeft)
+            {
+                // if go left boolean is then move pac man to the left direction by deducting the speed from the left
+                Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) - speed);
+            }
+            if (goUp)
+            {
+                // if go up boolean is true then deduct the speed integer from the top position of the pac man
+                Canvas.SetTop(pacman, Canvas.GetTop(pacman) - speed);
+            }
+            if (goDown)
+            {
+                // if go down boolean is true then add speed integer value to the pac man top position
+                Canvas.SetTop(pacman, Canvas.GetTop(pacman) + speed);
+            }
+            // end the movement 
 
-                //  gameloop event will control all of the movements, outcome, collision and score for the game
-                txtScore.Content = "Score: " + score; // show the scoreo to the txtscore label. 
 
-                // moving the character in the movement directions
+            // restrict the movement
+            if (goDown && Canvas.GetTop(pacman) + 80 > Application.Current.MainWindow.Height)
+            {
+                // if pac man is moving down the position of pac man is grater than the main window height then stop down movement
+                noDown = true;
+                goDown = false;
+            }
+            if (goUp && Canvas.GetTop(pacman) < 1)
+            {
+                // is pac man is moving and position of pac man is less than 1 then stop up movement
+                noUp = true;
+                goUp = false;
+            }
+            if (goLeft && Canvas.GetLeft(pacman) - 10 < 1)
+            {
+                // if pac man is moving left and pac man position is less than 1 then stop moving left
+                noLeft = true;
+                goLeft = false;
+            }
+            if (goRight && Canvas.GetLeft(pacman) + 70 > Application.Current.MainWindow.Width)
+            {
+                // if pac man is moving right and pac man position is greater than the main window then stop moving right
+                noRight = true;
+                goRight = false;
+            }
 
-                if (goRight)
+            pacmanHitBox = new Rect(Canvas.GetLeft(pacman), Canvas.GetTop(pacman), pacman.Width, pacman.Height); // asssign the pac man hit box to the pac man rectangle
+
+            // below is the main game loop that will scan through all of the rectangles available inside of the game
+            foreach (var x in MyCanvas.Children.OfType<Rectangle>())
+            {
+                // loop through all of the rectangles inside of the game and identify them using the x variable
+
+
+                Rect hitBox = new Rect(Canvas.GetLeft(x), Canvas.GetTop(x), x.Width, x.Height); // create a new rect called hit box for all of the available rectangles inside of the game
+
+                // find the walls, if any of the rectangles inside of the game has the tag wall inside of it
+                if ((string)x.Tag == "wall")
                 {
-                    // if go right boolean is true then move to the right direction by adding the speed to the left 
-                    Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) + speed);
-                }
-                if (goLeft)
-                {
-                    // if go left boolean is then move to the left direction by deducting the speed from the left
-                    Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) - speed);
-                }
-                if (goUp)
-                {
-                    // if go up boolean is true then deduct the speed integer from the top position 
-                    Canvas.SetTop(pacman, Canvas.GetTop(pacman) - speed);
-                }
-                if (goDown)
-                {
-                    // if go down boolean is true then add speed integer value to the top position
-                    Canvas.SetTop(pacman, Canvas.GetTop(pacman) + speed);
-                }
-                // end the movement 
-
-
-                // restrict the movement
-                if (goDown && Canvas.GetTop(pacman) + 80 > Application.Current.MainWindow.Height)
-                {
-                    // if character is moving down the position is greater than the main window height then stop down movement
-                    noDown = true;
-                    goDown = false;
-                }
-                if (goUp && Canvas.GetTop(pacman) < 1)
-                {
-                    // if moving and position of pac man is less than 1 then stop up movement
-                    noUp = true;
-                    goUp = false;
-                }
-                if (goLeft && Canvas.GetLeft(pacman) - 10 < 1)
-                {
-                    // if moving left and pac man position is less than 1 then stop moving left
-                    noLeft = true;
-                    goLeft = false;
-                }
-                if (goRight && Canvas.GetLeft(pacman) + 70 > Application.Current.MainWindow.Width)
-                {
-                    // if moving right and position is greater than the main window then stop moving right
-                    noRight = true;
-                    goRight = false;
-                }
-
-                pacmanHitBox = new Rect(Canvas.GetLeft(pacman), Canvas.GetTop(pacman), pacman.Width, pacman.Height); // asssign the pac man hit box to the pac man rectangle
-
-
-                // main game loop that will scan through all of the rectangles available inside of the game
-                foreach (var x in MyCanvas.Children.OfType<Rectangle>())
-                {
-                    // loop through all of the rectangles inside of the game and identify them using the x variable
-
-
-                    Rect hitBox = new Rect(Canvas.GetLeft(x), Canvas.GetTop(x), x.Width, x.Height); // create a new rect called hit box for all of the available rectangles inside of the game
-
-                    // find the walls, if any of the rectangles inside of the game has the tag wall inside of it
-                    if ((string)x.Tag == "wall")
+                    // check if we are colliding with the wall while moving left if true then stop the pac man movement
+                    if (goLeft == true && pacmanHitBox.IntersectsWith(hitBox))
                     {
-                        // check if we are colliding with the wall while moving left if true then stop the pac man movement
-                        if (goLeft == true && pacmanHitBox.IntersectsWith(hitBox))
-                        {
-                            Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) + 10);
-                            noLeft = true;
-                            goLeft = false;
-                        }
-                        // check if we are colliding with the wall while moving right if true then stop the pac man movement
-                        if (goRight == true && pacmanHitBox.IntersectsWith(hitBox))
-                        {
-                            Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) - 10);
-                            noRight = true;
-                            goRight = false;
-                        }
-                        // check if we are colliding with the wall while moving down if true then stop the pac man movement
-                        if (goDown == true && pacmanHitBox.IntersectsWith(hitBox))
-                        {
-                            Canvas.SetTop(pacman, Canvas.GetTop(pacman) - 10);
-                            noDown = true;
-                            goDown = false;
-                        }
-                        // check if we are colliding with the wall while moving up if true then stop the pac man movement
-                        if (goUp == true && pacmanHitBox.IntersectsWith(hitBox))
-                        {
-                            Canvas.SetTop(pacman, Canvas.GetTop(pacman) + 10);
-                            noUp = true;
-                            goUp = false;
-                        }
-
+                        Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) + 10);
+                        noLeft = true;
+                        goLeft = false;
+                    }
+                    // check if we are colliding with the wall while moving right if true then stop the pac man movement
+                    if (goRight == true && pacmanHitBox.IntersectsWith(hitBox))
+                    {
+                        Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) - 10);
+                        noRight = true;
+                        goRight = false;
+                    }
+                    // check if we are colliding with the wall while moving down if true then stop the pac man movement
+                    if (goDown == true && pacmanHitBox.IntersectsWith(hitBox))
+                    {
+                        Canvas.SetTop(pacman, Canvas.GetTop(pacman) - 10);
+                        noDown = true;
+                        goDown = false;
+                    }
+                    // check if we are colliding with the wall while moving up if true then stop the pac man movement
+                    if (goUp == true && pacmanHitBox.IntersectsWith(hitBox))
+                    {
+                        Canvas.SetTop(pacman, Canvas.GetTop(pacman) + 10);
+                        noUp = true;
+                        goUp = false;
                     }
 
-                    // check if the any of the rectangles has a coin tag inside of them
-                    if ((string)x.Tag == "coin")
+                }
+
+                // check if the any of the rectangles has a coin tag inside of them
+                if ((string)x.Tag == "coin")
+                {
+                    // if pac man collides with any of the coin and coin is still visible to the screen
+                    if (pacmanHitBox.IntersectsWith(hitBox) && x.Visibility == Visibility.Visible)
                     {
-                        // if pac man collides with any of the coin and coin is still visible to the screen
-                        if (pacmanHitBox.IntersectsWith(hitBox) && x.Visibility == Visibility.Visible)
-                        {
-                            // set the coin visiblity to hidden
-                            x.Visibility = Visibility.Hidden;
-                            // add 1 to the score
-                            score++;
-                        }
-
-                    }
-                    if (pacmanHitBox.IntersectsWith(new Rect(Canvas.GetLeft(mine), Canvas.GetTop(mine), mine.Width, mine.Height)))
-                    {
-                        GameOver("You hit a landmine. You lost all lives!");
-                    }
-
-                    // if any rectangle has the tag ghost inside of it
-                    if ((string)x.Tag == "ghost")
-                    {
-                        // check if pac man collides with the ghost 
-                        if (pacmanHitBox.IntersectsWith(hitBox))
-                        {
-                            if (remainingLives <= 1)
-                                // if collision has happened, then end the game by calling the game over function and passing in the message
-                                GameOver("No more life! Play again?");
-                            else
-                                GameOver("");
-                        }
-
-                        // if there is a rectangle called orangeguy in the game
-                        if (x.Name.ToString() == "orangeGuy")
-                        {
-                            // move that rectangle to towards the left of the screen
-                            Canvas.SetLeft(x, Canvas.GetLeft(x) - ghostSpeed);
-
-                        }
-                        else
-                        {
-                            // other ones can move towards the right of the screen
-                            Canvas.SetLeft(x, Canvas.GetLeft(x) + ghostSpeed);
-                        }
-
-                        // decrease one from the current ghost step integer
-                        currentGhostStep--;
-
-                        // if the current ghost step integer goes below 1 
-                        if (currentGhostStep < 1)
-                        {
-                            // reset the current ghost step to the ghost move step value
-                            currentGhostStep = ghostMoveStep;
-                            // reverse the ghost speed integer
-                            ghostSpeed = -ghostSpeed;
-
-                        }
-                    }
-                    if ((string)x.Tag == "life1des" && pacmanHitBox.IntersectsWith(hitBox) && x.Visibility == Visibility.Visible)
-                    {
-                        // Hide the life image
+                        // set the coin visiblity to hidden
                         x.Visibility = Visibility.Hidden;
+                        // add 1 to the score
+                        score++;
+                    }
 
-                        // Grant Pac-Man a bonus life
-                        remainingLives++;
+                }
 
+                if ((string)x.Tag == "Cherry")
+                {
+                    // if pac man collides with any of the coin and coin is still visible to the screen
+                    if (pacmanHitBox.IntersectsWith(hitBox) && x.Visibility == Visibility.Visible)
+                    {
+                        // set the coin visiblity to hidden
+                        x.Visibility = Visibility.Hidden;
+                        // add 5 to the score
+                        score+= 5 ;
                     }
 
                 }
 
 
+                // if any rectangle has the tag ghost inside of it
+                if ((string)x.Tag == "ghost")
+                {
+                    // check if pac man collides with the ghost 
+                    if (pacmanHitBox.IntersectsWith(hitBox))
+                    {
+                        // if collision has happened, then end the game by calling the game over function and passing in the message
+                        GameOver("Ghosts got you, click ok to play again");
+                    }
+
+                    // if there is a rectangle called orange guy in the game
+                    if (x.Name.ToString() == "orangeGuy")
+                    {
+                        // move that rectangle to towards the left of the screen
+                        Canvas.SetLeft(x, Canvas.GetLeft(x) - ghostSpeed);
+
+                    }
+                    else
+                    {
+                        // other ones can move towards the right of the screen
+                        Canvas.SetLeft(x, Canvas.GetLeft(x) + ghostSpeed);
+                    }
+
+                    // reduce one from the current ghost step integer
+                    currentGhostStep--;
+
+                    // if the current ghost step integer goes below 1 
+                    if (currentGhostStep < 1)
+                    {
+                        // reset the current ghost step to the ghost move step value
+                        currentGhostStep = ghostMoveStep;
+                        // reverse the ghost speed integer
+                        ghostSpeed = -ghostSpeed;
+
+                    }
+                }
+            }
+
+            
+
+
+            // if the player collected 85 coins in the game
+
+            if (score == 85)
+            {
+                // show game over function with the you win message
+                GameOver("You Win, you collected all of the coins");
+            }
+
+
+        }
+
+        
+        // Declare a variable to track remaining lives
+        private int remainingLives = 3;
+
+        // Store Pac-Man's initial position
+        private int initialPacmanX;
+        private int initialPacmanY;
+
+        private void GameOver(string message)
+        {
+            // Decrease a life
+            remainingLives--;
+
+            if (remainingLives == 2)
+            {
+                // Show the remaining lives
+                life3.Visibility = Visibility.Hidden;
+            }
+
+            if (remainingLives == 1)
+            {
+                // Show the remaining lives
+                life2.Visibility = Visibility.Hidden;
+            }
+
+            if (remainingLives == 0)
+            {
+                // Show the remaining lives
+                life1.Visibility = Visibility.Hidden;
+            }
+
+            // Check if there are remaining lives
+            if (remainingLives > 0)
+            {
+                // Display remaining lives
+                MessageBox.Show($"You have {remainingLives} lives left.\n{message}", "The Pac Man Game WPF");
+
+                // Restart the game
+                ResetGame();
+            }
+            else
+            {
+                // Game over when no lives left
+                gameTimer.Stop(); // stop the game timer
+                MessageBox.Show(message, "The PacMan Game"); // show a message box with the message that is passed in this function
+                                                                          // Perform any additional game over actions if needed
             }
         }
+
+        private void ResetGame()
+        {
+            // Reset the game state and start a new round
+            // Perform necessary actions to reset the game
+
+            // Example: Clear the game board, reposition Pac-Man and ghosts, reset any game variables, etc.
+
+            // Reset Pac-Man's position to the initial position
+            Canvas.SetLeft(pacman, initialPacmanX);
+            Canvas.SetTop(pacman, initialPacmanY);
+
+            // Start a new round
+            gameTimer.Start(); // start the game timer
+        }
+
+    }
+}
+
+
