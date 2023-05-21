@@ -96,7 +96,6 @@ namespace Trails_of_Madness
 
         }
 
-
         private void PauseButton_Click(object sender, RoutedEventArgs e)
         {
             if (gameTimer.IsEnabled)
@@ -106,5 +105,207 @@ namespace Trails_of_Madness
             else
             {
                 gameTimer.Start(); // Resume the game timer
+            }
+        }
+         private void GameSetUp()
+        {
+            initialPacmanX = (int)Canvas.GetLeft(pacman);
+            initialPacmanY = (int)Canvas.GetTop(pacman);
+            // this function will run when the program loads
+
+            MyCanvas.Focus(); // set my canvas as the main focus for the program
+
+            gameTimer.Tick += GameLoop; // link the game loop event to the time tick
+            gameTimer.Interval = TimeSpan.FromMilliseconds(20); // set time to tick every 20 milliseconds
+            gameTimer.Start(); // start the time
+            currentGhostStep = ghostMoveStep; // set current ghost step to the ghost move step
+
+            // below pac man and the ghosts images are being imported from the images folder and then we are assigning the image brush to the rectangles
+            ImageBrush pacmanImage = new ImageBrush();
+            pacmanImage.ImageSource = new BitmapImage(new Uri("pack://application:,,,/images/pacman.png"));
+            pacman.Fill = pacmanImage;
+
+            ImageBrush lifeImage = new ImageBrush();
+            lifeImage.ImageSource = new BitmapImage(new Uri("pack://application:,,,/images/life.png"));
+ 
+
+
+
+        }
+
+        private void GameLoop(object sender, EventArgs e)
+        {
+            if (!isPaused)
+            {
+
+                //  gameloop event will control all of the movements, outcome, collision and score for the game
+                txtScore.Content = "Score: " + score; // show the scoreo to the txtscore label. 
+
+                // moving the character in the movement directions
+
+                if (goRight)
+                {
+                    // if go right boolean is true then move to the right direction by adding the speed to the left 
+                    Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) + speed);
+                }
+                if (goLeft)
+                {
+                    // if go left boolean is then move to the left direction by deducting the speed from the left
+                    Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) - speed);
+                }
+                if (goUp)
+                {
+                    // if go up boolean is true then deduct the speed integer from the top position 
+                    Canvas.SetTop(pacman, Canvas.GetTop(pacman) - speed);
+                }
+                if (goDown)
+                {
+                    // if go down boolean is true then add speed integer value to the top position
+                    Canvas.SetTop(pacman, Canvas.GetTop(pacman) + speed);
+                }
+                // end the movement 
+
+
+                // restrict the movement
+                if (goDown && Canvas.GetTop(pacman) + 80 > Application.Current.MainWindow.Height)
+                {
+                    // if character is moving down the position is greater than the main window height then stop down movement
+                    noDown = true;
+                    goDown = false;
+                }
+                if (goUp && Canvas.GetTop(pacman) < 1)
+                {
+                    // if moving and position of pac man is less than 1 then stop up movement
+                    noUp = true;
+                    goUp = false;
+                }
+                if (goLeft && Canvas.GetLeft(pacman) - 10 < 1)
+                {
+                    // if moving left and pac man position is less than 1 then stop moving left
+                    noLeft = true;
+                    goLeft = false;
+                }
+                if (goRight && Canvas.GetLeft(pacman) + 70 > Application.Current.MainWindow.Width)
+                {
+                    // if moving right and position is greater than the main window then stop moving right
+                    noRight = true;
+                    goRight = false;
+                }
+
+                pacmanHitBox = new Rect(Canvas.GetLeft(pacman), Canvas.GetTop(pacman), pacman.Width, pacman.Height); // asssign the pac man hit box to the pac man rectangle
+
+
+                // main game loop that will scan through all of the rectangles available inside of the game
+                foreach (var x in MyCanvas.Children.OfType<Rectangle>())
+                {
+                    // loop through all of the rectangles inside of the game and identify them using the x variable
+
+
+                    Rect hitBox = new Rect(Canvas.GetLeft(x), Canvas.GetTop(x), x.Width, x.Height); // create a new rect called hit box for all of the available rectangles inside of the game
+
+                    // find the walls, if any of the rectangles inside of the game has the tag wall inside of it
+                    if ((string)x.Tag == "wall")
+                    {
+                        // check if we are colliding with the wall while moving left if true then stop the pac man movement
+                        if (goLeft == true && pacmanHitBox.IntersectsWith(hitBox))
+                        {
+                            Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) + 10);
+                            noLeft = true;
+                            goLeft = false;
+                        }
+                        // check if we are colliding with the wall while moving right if true then stop the pac man movement
+                        if (goRight == true && pacmanHitBox.IntersectsWith(hitBox))
+                        {
+                            Canvas.SetLeft(pacman, Canvas.GetLeft(pacman) - 10);
+                            noRight = true;
+                            goRight = false;
+                        }
+                        // check if we are colliding with the wall while moving down if true then stop the pac man movement
+                        if (goDown == true && pacmanHitBox.IntersectsWith(hitBox))
+                        {
+                            Canvas.SetTop(pacman, Canvas.GetTop(pacman) - 10);
+                            noDown = true;
+                            goDown = false;
+                        }
+                        // check if we are colliding with the wall while moving up if true then stop the pac man movement
+                        if (goUp == true && pacmanHitBox.IntersectsWith(hitBox))
+                        {
+                            Canvas.SetTop(pacman, Canvas.GetTop(pacman) + 10);
+                            noUp = true;
+                            goUp = false;
+                        }
+
+                    }
+
+                    // check if the any of the rectangles has a coin tag inside of them
+                    if ((string)x.Tag == "coin")
+                    {
+                        // if pac man collides with any of the coin and coin is still visible to the screen
+                        if (pacmanHitBox.IntersectsWith(hitBox) && x.Visibility == Visibility.Visible)
+                        {
+                            // set the coin visiblity to hidden
+                            x.Visibility = Visibility.Hidden;
+                            // add 1 to the score
+                            score++;
+                        }
+
+                    }
+                    if (pacmanHitBox.IntersectsWith(new Rect(Canvas.GetLeft(mine), Canvas.GetTop(mine), mine.Width, mine.Height)))
+                    {
+                        GameOver("You hit a landmine. You lost all lives!");
+                    }
+
+                    // if any rectangle has the tag ghost inside of it
+                    if ((string)x.Tag == "ghost")
+                    {
+                        // check if pac man collides with the ghost 
+                        if (pacmanHitBox.IntersectsWith(hitBox))
+                        {
+                            if (remainingLives <= 1)
+                                // if collision has happened, then end the game by calling the game over function and passing in the message
+                                GameOver("No more life! Play again?");
+                            else
+                                GameOver("");
+                        }
+
+                        // if there is a rectangle called orangeguy in the game
+                        if (x.Name.ToString() == "orangeGuy")
+                        {
+                            // move that rectangle to towards the left of the screen
+                            Canvas.SetLeft(x, Canvas.GetLeft(x) - ghostSpeed);
+
+                        }
+                        else
+                        {
+                            // other ones can move towards the right of the screen
+                            Canvas.SetLeft(x, Canvas.GetLeft(x) + ghostSpeed);
+                        }
+
+                        // decrease one from the current ghost step integer
+                        currentGhostStep--;
+
+                        // if the current ghost step integer goes below 1 
+                        if (currentGhostStep < 1)
+                        {
+                            // reset the current ghost step to the ghost move step value
+                            currentGhostStep = ghostMoveStep;
+                            // reverse the ghost speed integer
+                            ghostSpeed = -ghostSpeed;
+
+                        }
+                    }
+                    if ((string)x.Tag == "life1des" && pacmanHitBox.IntersectsWith(hitBox) && x.Visibility == Visibility.Visible)
+                    {
+                        // Hide the life image
+                        x.Visibility = Visibility.Hidden;
+
+                        // Grant Pac-Man a bonus life
+                        remainingLives++;
+
+                    }
+
+                }
+
+
             }
         }
