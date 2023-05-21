@@ -1,0 +1,110 @@
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+using System.Windows.Threading; // import threading namespace to use the dispatcher time
+
+namespace Trails_of_Madness
+{
+    /// Interaction logic for MainWindow.xaml
+    public partial class MainWindow : Window
+    {
+
+        DispatcherTimer gameTimer = new DispatcherTimer(); // create a new instance of the dispatcher timer called game timer
+
+        bool goLeft, goRight, goDown, goUp; // 4 boolean created to move player in 4 direction
+        bool noLeft, noRight, noDown, noUp; // 4 more boolean created to stop player moving in that direction
+
+        int speed = 8; // player speed
+
+        Rect pacmanHitBox; // player hit box, this will be used to check for collision between player to walls, ghost and coints
+
+        int ghostSpeed = 10; // ghost image speed
+        int ghostMoveStep = 160; // ghost step limits
+        int currentGhostStep; // current movement limit for the ghosts
+        int score = 0; // score keeping integer
+        private bool pacmanHitLandmine = false;
+        private bool isPaused = false;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            GameSetUp(); // run the game set up function
+        }
+
+        private void CanvasKeyDown(object sender, KeyEventArgs e)
+        {
+            // this is the key down event
+
+            if (e.Key == Key.Left && noLeft == false)
+            {
+                // if the left key is down and the boolean noLeft is set to false
+                goRight = goUp = goDown = false; // set rest of the direction booleans to false
+                noRight = noUp = noDown = false; // set rest of the restriction boolean to false
+
+                goLeft = true; // set go left true
+
+                pacman.RenderTransform = new RotateTransform(-180, pacman.Width / 2, pacman.Height / 2); // rotate the pac man image to face left
+            }
+
+            if (e.Key == Key.Right && noRight == false)
+            {
+                // if the right key pressed and no right boolean is false
+                noLeft = noUp = noDown = false; // set rest of the direction boolean to false
+                goLeft = goUp = goDown = false; // set rest of the restriction boolean to false
+
+                goRight = true; // set go right to true
+
+                pacman.RenderTransform = new RotateTransform(0, pacman.Width / 2, pacman.Height / 2); // rotate the pac man image to face right
+
+            }
+
+            if (e.Key == Key.Up && noUp == false)
+            {
+                // if the up key is pressed and no up is set to false
+                noRight = noDown = noLeft = false; // set rest of the direction boolean to false
+                goRight = goDown = goLeft = false; // set rest of the restriction boolean to false
+
+                goUp = true; // set go up to true
+
+                pacman.RenderTransform = new RotateTransform(-90, pacman.Width / 2, pacman.Height / 2); // rotate the pac man character to face up
+            }
+
+            if (e.Key == Key.Down && noDown == false)
+            {
+                // if the down key is press and the no down boolean is false
+                noUp = noLeft = noRight = false; // set rest of the direction boolean to false
+                goUp = goLeft = goRight = false; // set rest of the restriction boolean to false
+
+                goDown = true; // set go down to true
+
+                pacman.RenderTransform = new RotateTransform(90, pacman.Width / 2, pacman.Height / 2); // rotate the pac man character to face down
+            }
+
+        }
+
+
+        private void PauseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (gameTimer.IsEnabled)
+            {
+                gameTimer.Stop(); // Pause the game timer
+            }
+            else
+            {
+                gameTimer.Start(); // Resume the game timer
+            }
+        }
